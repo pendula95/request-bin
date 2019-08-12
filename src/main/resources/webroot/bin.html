@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en" class="h-100">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="assets/sticky-footer-navbar.css">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>Hello, world!</title>
+</head>
+<body class="d-flex flex-column h-100">
+<header>
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <a class="navbar-brand" href="/">RequestBin</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">API<span class="sr-only">(current)</span></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</header>
+
+<!-- Begin page content -->
+<main role="main" class="flex-shrink-0">
+    <div class="container" id="container">
+        <h2 class="mt-5" id="bin-id"></h2>
+        <div id="content">
+            <p class="lead">No requests received yet.</p>
+            <p class="lead">Try one of these and refresh to see the results:
+                <ul id="help">
+                </ul>
+            </p>
+        </div>
+    </div>
+</main>
+
+<footer class="footer mt-auto py-3">
+    <div class="container">
+        <span class="text-muted">Place sticky footer content here.</span>
+    </div>
+</footer>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/sockjs/0.3.4/sockjs.min.js"></script>
+<script src="assets/vertx-eventbus.js"></script>
+<script>
+    let isEmpty = true;
+    let uuid = new URLSearchParams(window.location.search).get('uuid');
+    document.getElementById("bin-id").innerText = 'RequestBin \'' + uuid + '\''
+    console.log(uuid);
+
+    let eventBus = new EventBus('http://localhost:8888/eventbus');
+    eventBus.onopen = function () {
+        eventBus.registerHandler(uuid, function (error, message) {
+            console.log('received a message: ' + message.body);
+            if (isEmpty) {
+                $("#content").empty();
+                isEmpty = false;
+            }
+            $("<p>").text(message.body).appendTo("#content");
+        });
+    };
+
+    $.ajax({
+        url: "/api/bin/" + uuid,
+        dataType: 'json',
+        method: 'get',
+        success: function (data) {
+            console.log(data);
+            if (data.length > 0 && isEmpty) {
+                $("#content").empty();
+                isEmpty = false;
+            }
+            $.each(data, function (index, item) {
+                $("<p>").text(JSON.stringify(item)).appendTo("#content");
+            });
+        },
+        error: function (err) {
+            alert(err);
+        }
+    });
+
+    if (document.getElementById("help") != null) {
+        $("<li>").text("curl -H 'X-Status: Awesome' localhost:8888/" + uuid).appendTo("#help");
+        $("<li>").text("wget localhost:8888/" + uuid + "?hello=world").appendTo("#help");
+        $("<li>").text("echo \"hello=world\" | POST  localhost:8888/" + uuid).appendTo("#help");
+    }
+
+</script>
+</body>
+</html>
