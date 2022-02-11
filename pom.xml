@@ -17,7 +17,7 @@
         <jdk.version>1.8</jdk.version>
         <maven-shade-plugin.version>3.2.1</maven-shade-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-        <vertx.version>3.8.0</vertx.version>
+        <vertx.version>3.9.4</vertx.version>
         <logback.version>1.2.3</logback.version>
         <main-verticle>org.pendula95.web.requestbin.RequestBinVerticle</main-verticle>
     </properties>
